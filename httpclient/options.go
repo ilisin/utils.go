@@ -35,3 +35,10 @@ type OptionDecoder struct{ decoder Decoder }
 
 func NewDecoderOption(d Decoder) Option                { return &OptionDecoder{decoder: d} }
 func (od *OptionDecoder) SetOption(client *HttpClient) { client.responseDecoder = od.decoder }
+
+type OptionRequestHandler struct{ handler RequestHandler }
+
+func NewRequestHandlerOption(h RequestHandler) Option { return &OptionRequestHandler{handler: h} }
+func (or *OptionRequestHandler) SetOption(client *HttpClient) {
+	client.reqHandlers = append(client.reqHandlers, or.handler)
+}

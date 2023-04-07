@@ -1,6 +1,7 @@
 package httpclient
 
 import (
+	"net/http"
 	"testing"
 	"time"
 )
@@ -18,15 +19,17 @@ type Rsp struct {
 
 func TestPost(t *testing.T) {
 
-	c := New(NewBaseURLOption("https://open.feishu.cn/open-apis"), NewTimeoutOption(10*time.Second))
+	c := New(NewBaseURLOption("https://www.cip.cc"), NewTimeoutOption(10*time.Second), NewRequestHandlerOption(func(r *http.Request) error {
+		r.Header.Set("User-Agent", "curl/7.68.0")
+		return nil
+	}))
 
 	req := &Req{
 		MsgType: "text",
-		// Content: struct{ Text string }{Text: "hello"},
 	}
 	req.Content.Text = "hello, im from go-code http client"
 	var rsp = &Rsp{}
-	if err := c.POST("/bot/v2/hook/e6708fcd-fb51-4782-a387-12b39366eb31", req, rsp); err != nil {
+	if err := c.POST("/bot/v2/hook/xxx", req, rsp); err != nil {
 		t.Fatal(err)
 	}
 }

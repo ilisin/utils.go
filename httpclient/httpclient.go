@@ -3,7 +3,6 @@ package httpclient
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"strings"
@@ -19,6 +18,7 @@ type HttpClient struct {
 	requestEncoder  Encoder
 	responseDecoder Decoder
 	log             bool
+	reqHandlers     []RequestHandler
 
 	c *http.Client
 }
@@ -85,8 +85,15 @@ func (hc *HttpClient) Request(method, url string, querys map[string]string, reqO
 	if hc.requestEncoder == jsonEncoder || hc.responseDecoder == jsonDecoder {
 		req.Header.Add("Content-Type", "application/json")
 	}
+	for _, h := range hc.reqHandlers {
+		if err = h(req); err != nil {
+			return err
+		}
+	}
 	for _, h := range handlers {
-		h(req)
+		if err = h(req); err != nil {
+			return err
+		}
 	}
 	startAt := time.Now()
 	rsp, err := hc.c.Do(req)
@@ -98,7 +105,7 @@ func (hc *HttpClient) Request(method, url string, querys map[string]string, reqO
 	defer rsp.Body.Close()
 	log["responseStatus"] = rsp.StatusCode
 	log["duration"] = time.Now().Sub(startAt)
-	rspBody, err := ioutil.ReadAll(rsp.Body)
+	rspBody, err := io.ReadAll(rsp.Body)
 	if err != nil {
 		log["bodyReadErr"] = err
 		logrus.WithFields(log).Error("HTTPCLIENT request error")
