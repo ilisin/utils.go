@@ -64,7 +64,9 @@ func (hc *HttpClient) getRequestURL(reqUrl string, querys map[string]string) str
 
 func (hc *HttpClient) Request(method, url string, querys map[string]string, reqObj, rspObj interface{}, handlers ...RequestHandler) error {
 	var reader io.Reader = nil
-	if reqObj != nil {
+	if raw, ok := reqObj.(string); ok {
+		reader = bytes.NewBuffer([]byte(raw))
+	} else if reqObj != nil {
 		bodyBytes, err := hc.requestEncoder.Encode(reqObj)
 		if err != nil {
 			return err
